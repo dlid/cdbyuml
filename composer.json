@@ -1,0 +1,22 @@
+{
+    "name": "dlid/cdbyuml",    
+    "type": "library",
+    "description": "PHP classes for generating database models using yuml.me",
+    "keywords": ["module", "uml", "library", "yuml"],
+    "homepage": "https://github.com/dlid/cdbyuml",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Lidström",
+            "email": "me@dlid.se",
+            "homepage": "http://dlid.se",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4"
+    },
+    "autoload": {
+        "psr-4": { "Dlid\\": "src/" }
+    }
+}
