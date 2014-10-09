@@ -29,13 +29,16 @@ Options
 --------------
 ```php
 $cdbyuml->setOptions([
- 'proxy'        =>   null,    // Proxy address
- 'proxyauth'    =>   null,    // Proxy authentication (username:password)
- 'query'        =>   null,    // \PDO Object or custom function to fetch data from database
- 'sql_dialect'  =>  'sqlite', // sqlite or mysql. Determines which queries to run
- 'style'        =>  'plain',  // Yuml.me styles (plain, scruffy or nofunky)
- 'close'        =>  null,     // Optional callback function to close database
- 'force'        =>  false     // Ignore all caching.
+ 'proxy'        =>   null,       // Proxy address
+ 'proxyauth'    =>   null,       // Proxy authentication (username:password)
+ 'query'        =>   null,       // \PDO Object or custom function to fetch data from database
+ 'sql_dialect'  =>  'sqlite',    // sqlite or mysql. Determines which queries to run
+ 'style'        =>  'plain',     // Yuml.me styles (plain, scruffy or nofunky)
+ 'scale'        =>  100,         // Yuml.me scale (100 = 100%) 
+ 'close'        =>  null,        // Optional callback function to close database
+ 'force'        =>  false,       // Ignore all caching.
+ 'cachepath'    =>  null,        // Full path to the cachefile
+ 'cachetime'    =>  '15 minutes' // Maximum time before re-validating database structure
 ]);
 ```
 
@@ -94,6 +97,34 @@ Finally you can also use the constructor in the very same way as setOptions:
 # Example passing just the PDO:
 $cdbyuml = new \Dlid\DbYuml\CDbYuml($dbh);
 ```
+
+Caching
+--------------
+
+```php
+$cdbyuml->setOptions([
+ 'cachefile' => '/somepath/db_diagram',
+ 'cachetime' => '5 minutes'
+]);
+```
+
+In the above examle, if you specify **cachepath** and **cachetime** two things will happend:
+
+ - The yuml text will be saved to the file /somepath/db_diagram.cache
+ - The downloaded image will be saved to the file /somepath/db_diagram.png
+
+The cache will be invalidated if:
+
+ - you change the 'style' parameter
+ - you change the 'scale' parameter
+ - the cachetime has expired (five minutes since last .cache-file was written)
+
+If 'style' or 'scale' changes, the database structure will be extracted again and a new diagram will be downloaded.
+
+If the cachetime expires then the database will be queried again for it's structure and:
+
+ - if the structure has changed, then a new diagram will be downloaded
+ - otherwise the /somepath/db_diagram.png image will be used
 
 ##Composer
 
