@@ -101,6 +101,9 @@ $cdbyuml = new \Dlid\DbYuml\CDbYuml($dbh);
 Caching
 --------------
 
+I recommend using caching for your diagrams. If you do not, then CDbYuml will query your database for it's structure and download a new diagram from yuml.me **every time**. Please cache and everyone will be so, so happy!
+
+
 ```php
 $cdbyuml->setOptions([
  'cachefile' => '/somepath/db_diagram',
