@@ -57,7 +57,31 @@ $cdbyuml->execute()
 
 ```
 
-##### Composer
+### Alternative ways to do it
+#### Passing the PDO object as a query
+
+You can also pass your PDO object as the first parameter. Other options can then be set using the second parameter.
+
+```php
+# Just the PDO:
+$cdbyuml->setOptions($dbh);
+
+# Some additional options
+$cdbyuml->setOptions($dbh, [ 'proxy' => 'http://some-proxy.example.net:8080' ]);
+```
+
+**Note**: Using the method above you can not pass in the 'query' option in the second parameter. The internal function for retreiving data will then be used
+
+#### Using the constructor instead of  setOptions
+
+Finally you can also use the constructor in the very same way as setOptions:
+
+```php
+# Example passing just the PDO:
+$cdbyuml = new \Dlid\DbYuml\CDbYuml($dbh);
+```
+
+##Composer
 
 ```sh
 composer example here
