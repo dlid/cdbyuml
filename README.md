@@ -25,6 +25,20 @@ CDbYuml has the following requirements:
 * [CURL] - The Client URL extension must be enabled in PHP
 * [PHP] - tested with PHP 5.4
 
+Options
+--------------
+```php
+$cdbyuml->setOptions([
+ 'proxy'        =>   null,    // Proxy address
+ 'proxyauth'    =>   null,    // Proxy authentication (username:password)
+ 'query'        =>   null,    // \PDO Object or custom function to fetch data from database
+ 'sql_dialect'  =>  'sqlite', // sqlite or mysql. Determines which queries to run
+ 'style'        =>  'plain',  // Yuml.me styles (plain, scruffy or nofunky)
+ 'close'        =>  null,     // Optional callback function to close database
+ 'force'        =>  false     // Ignore all caching.
+]);
+```
+
 Sample usage
 --------------
 In the following example a sqlite database is created with a number of tables.
