@@ -1,7 +1,7 @@
 CDbYuml
 =========
 
-CDbYuml will create class diagrams from your PDO sqlite or mysql datasource using [yuml.me](yuml.me).
+CDbYuml will create class diagrams from your PDO sqlite or mysql datasource using [yuml.me](http://yuml.me).
 
   - Flexible so you can use your favorite datasbase access layer
   - Easy to use with an existing PDO connection (see example below)
@@ -15,7 +15,7 @@ CDbYuml can be used with many other database librariees due to the fact that you
 Version
 ----
 
-0.1
+0.2
 
 Tech
 -----------
@@ -24,6 +24,13 @@ CDbYuml has the following requirements:
 
 * [CURL] - The Client URL extension must be enabled in PHP
 * [PHP] - tested with PHP 5.4
+
+Note about complex diagrams
+-----------
+
+For very large and/or databases this may not be the library you are looking for. It has been tested with simple database structures with a few foreign keys of different kinds.
+
+If the diagram is not generated like you want, you can always send me the generated text and I can try to figure out how to make it compatible.
 
 Options
 --------------
@@ -41,6 +48,14 @@ $cdbyuml->setOptions([
  'cachetime'    =>  '15 minutes' // Maximum time before re-validating database structure
 ]);
 ```
+
+Methods
+--------------
+
+* **setOptions** ( *$options* ) - Configure the library. See option above
+* **outputImage** ( *[$force = true]* ) - generate diagram and output the image to the browser
+* **outputText** ( *[$force = true]* ) - output a HTML page with debug information
+* **__construct** ( *$options* ) - Configure the library. Same parameters as setOptions
 
 Sample usage
 --------------
@@ -68,6 +83,7 @@ $cdbyuml->setOptions([
 
 // Fetch metadata from database and generate the YUml string
 $cdbyuml->execute()
+   #->outputText() // Uncomment to see debug information
    // Output the generated diagram
    ->outputImage();
 

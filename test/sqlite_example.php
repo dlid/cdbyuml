@@ -47,8 +47,12 @@ $file_db->exec("CREATE TABLE [student] (
 
 
 $cdbyuml = new \Dlid\DbYuml\CDbYuml($file_db, [
-  'cachepath'  => 'school.sqlite', // path and name of cache file
+  'scale' => 100,
+  'style' => 'scruffy',
+  'cachepath'  => 'sqlite_example', // path and name of cache file
   'cachetime'  => '15 minutes'       // re-check database structure only every 15 minutes
 ]);
 
-$cdbyuml->outputImage();
+$cdbyuml
+  #->outputText() // Uncommen to see debug information
+  ->outputImage();

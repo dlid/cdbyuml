@@ -17,9 +17,12 @@ class CDbYuml {
 	private $options = [];
 	private $styles = ['scruffy','nofunky','plain'];
 
+
 	private $dsl_text = null;
 	private $dsl_cache = null;
 	private $image = null;
+
+	private $queries = array();
 
 	public function __construct($options = null, $altOptions = null) {
 		// Allow to set the options in the constructor
@@ -79,17 +82,27 @@ class CDbYuml {
 			if( !in_array($this->options['sql_dialect'], array('mysql', 'sqlite') )) {
 				throw new \Exception("Only 'sqlite' and 'mysql' is supported for now");
 			}
+		}
 
-			if(isset($this->options['query'])) {
-				#echo $this->getDslText();
+		private function isCacheEnabled() {
+			if( $this->options['force'] == true ) {
+				return false;
 			}
+			return $this->options['cachepath'] !== null;
 		}
 
 		private function getUrl() {
 			return "http://yuml.me/diagram/" . $this->options['style'] . ";scale:" . $this->options['scale'] . "/class/";
 		}
 
+		private function getEditUrl() {
+			return "http://yuml.me/diagram/" . $this->options['style'] . "/class/draw";
+		}
 
+		/**
+		 * POST the dsl_text to yuml.me and download the image
+		 * @return [type] [description]
+		 */
 		public function downloadDiagram() {
 
 			if($this->image !== null && !$this->options['force']) {
@@ -97,18 +110,17 @@ class CDbYuml {
 			}
 
 			$this->getDslText();
-			if($this->options['cachepath']) {
+			if($this->isCacheEnabled()) {
 				if($this->dsl_cache && $this->dsl_cache == $this->dsl_text) {
 					if(is_file($this->getPath('png'))) {
+						header('x-CachedImageUsed: 1');
 						$this->image = file_get_contents($this->getPath('png'));
+						return $this;
 					}
-					return $this;
 				}
 			}
 
 			$url = $this->getUrl();
-
-			#header('Content-Type: text/plain'); echo $umlString;exit;
 
 			// Prepare string for posting
 			$dslString = preg_replace(
@@ -158,37 +170,163 @@ class CDbYuml {
 			}
 			$this->image = $this->GetImageFromUrl("http://www.yuml.me/diagram/class/" . $content);
 
-			$this->writeToFile('png', $this->image, true);
+			if($this->isCacheEnabled()) {
+				$this->writeImageFile($this->image);
+			}
 
 			return $this;
 
 		}
 
 
-		public function outputImage() {
+		/**
+		 * Output the diagram image to the browser
+		 * @return [type] [description]
+		 */
+		public function outputImage($nocache = false) {
+
+			if( $nocache === true) {
+				$this->options['force'] = true;
+			}
+
 			$this->downloadDiagram();
 			header('Content-type: image/png');
 			echo $this->image;
 			exit;
 		}
 
+		public function outputText($nocache = false) {
+
+			if( $nocache === true) {
+				$this->options['force'] = true;
+			}
+
+			$text = htmlentities($this->getDslText(), null, 'utf-8');
+			$url = $this->getUrl();
+			$editurl = $this->getEditUrl();
+			$dialect = $this->getSQLDialect();
+
+			$queryHtml = "";
+			foreach( $this->queries as $query) {
+				$sql = htmlentities($query['sql'], null, 'utf-8');
+				$duration = htmlentities($query['duration'], null, 'utf-8');
+				$rowcount = htmlentities($query['rowcount'], null, 'utf-8');
+				$name = htmlentities($query['name'], null, 'utf-8');
+				if(count($query['parameters']) > 0) {
+					$parameters = "<pre>" . htmlentities(print_r($query['parameters'], 1), null, 'utf-8') ."</pre>";
+				} else {
+					$parameters = "";
+				}
+
+				$queryHtml.="<tr><th>$name</th><td ><pre>$sql</pre></td><td>$parameters</td><td>$rowcount</td><td>$duration</td></tr>";
+
+			}
+
+			if( $queryHtml ) {
+				$queryHtml = <<<EOD
+				<table border='1' cellpadding='10' cellspacing='2'>
+					<caption>Executed queries ($dialect)</caption>
+					<thead>
+						<th>Name</th>
+						<th>Query</th>
+						<th>Parameters</th>
+						<th>Returned rows</th>
+						<th>Duration</th>
+					</thead>
+					<tbody>{$queryHtml}</tbody>
+					</table>
+EOD;
+			} else {
+				$queryHtml = "No queries executed";
+			}
+
+			$html = <<<EOD
+				<div style='background-color: #fff; clear:both;'>
+					<strong>dsl text</strong><br />
+					<textarea style='width:100%; height: 20em; color: #000;'>$text</textarea>
+				</div>
+				<p><strong>Edit URL</strong><br /><a href='$editurl' target='_blank'>$editurl</a> (copy and paste the text above onto this page)</p>
+				<p><strong>POST URL</strong><br /> $url (used by CDbYuml to generate the diagram image)</p>
+				$queryHtml
+EOD;
+		echo $html;
+			exit;
+		}
+
+		
+
+		/**
+		 * Save the diagram image to a location of your choice
+		 * @param  [type] $path [description]
+		 * @return [type]       [description]
+		 */
 		public function saveImage($path) {
 			$this->downloadDiagram();
-			file_put_contents($path, $this->image);
+
+			if(!is_writable($path)) {
+				throw new \Exception("File or path is not writeable: " . $path);
+			}
+
+			if( !@file_put_contents($path, $this->image)) {
+				throw new \Exception("Could not write file " . error_get_last()['message']);
+			}
+
 			return $this;
 		}
 
 
-		private function writeToFile($extension, $data, $raw = false) {
+		private function writeImageFile($data) {
 
-			if( !$raw) {
-				$data = json_encode( array( 
+			$cachepath = $this->getPath("png");
+
+			if(is_file($cachepath) && !is_writable($cachepath)) {
+				throw new \Exception("File or path is not writeable: " . $cachepath);
+			}
+
+			if( !@file_put_contents($cachepath, $data)) {
+				throw new \Exception("Could not write cache file " . error_get_last()['message']);
+			}
+
+		}
+
+		private function writeCache($data) {
+
+			$cachepath = $this->getPath("cache");
+
+			$data = json_encode( array( 
 						'data' => $data, 
 						'timestamp' => time(),
 						'hash' => $this->getHash()));
+
+			if( is_file($cachepath) && !is_writable($cachepath)) {
+				throw new \Exception("File or path is not writeable: " . $cachepath);
 			}
 
-			file_put_contents($this->getPath($extension), $data);
+			if( !@file_put_contents($cachepath, $data)) {
+				throw new \Exception("Could not write cache file " . error_get_last()['message']);
+			}
+		}
+
+		private function readCache() {
+			$cachepath = $this->getPath("cache");
+
+			$file_data = array( 
+						'data' => null, 
+						'timestamp' => null,
+						'hash' => null);
+
+			if(is_file($cachepath)) {
+				$file_content = @file_get_contents($cachepath);
+				if( $file_content) {
+					$file_data = json_decode($file_content, true);
+					if( !$file_data ) {
+						throw new \Exception("Could not decode JSON from " . $cachepath);
+					}
+				}
+			}
+
+			return (object)$file_data;
+
 		}
 
 		private function readFromFile($extension) {
@@ -206,32 +344,35 @@ class CDbYuml {
 
 		public function getDslText() {
 
-			if( $this->options['cachepath'] && is_file($this->getPath('cache'))) {
-					$cache =  $this->readFromFile('cache');
-					if( $cache) {
-						if( $cache->hash == $this->getHash() ){
-							$this->dsl_text = $cache->data;
-							$expirationTime = strtotime ( $this->options['cachetime'], $cache->timestamp );
-							if( $expirationTime ) {
-								if( time() >= $expirationTime  ) {
+			// Read from cache if available
+			if( $this->isCacheEnabled() ) {
+				if( is_file($this->getPath('cache'))) {
+						$cache =  $this->readCache();
+						if( $cache) {
+							if( $cache->hash == $this->getHash() ){
+								$this->dsl_text = $cache->data;
+								$expirationTime = strtotime ( $this->options['cachetime'], $cache->timestamp );
+								if( $expirationTime ) {
+									if( time() >= $expirationTime  ) {
+										$this->dsl_text = null;
+										unset($cache);
+									} else {
+										header('x-DslCacheUsed: 1');
+										$this->dsl_cache = $cache->data;
+									}
+								} else {
+									// Not a valid expiration time. Invalidate text
 									$this->dsl_text = null;
 									unset($cache);
-								} else {
-									$this->dsl_cache = $cache->data;
 								}
 							} else {
-								// Not a valid expiration time. Invalidate text
-								$this->dsl_text = null;
 								unset($cache);
 							}
 						} else {
 							unset($cache);
 						}
-					} else {
-						unset($cache);
-					}
+				}
 			}
-
 
 			if( $this->dsl_text !== null && !$this->options['force'] ) {
 				return $this->dsl_text;
@@ -245,6 +386,10 @@ class CDbYuml {
 					'fk' => $this->findForeignKeysInTable($tableName)
 				];
 			}
+
+
+			#echo "<pre>";print_r($tables);
+			#exit;
 
 			// Recursive function to create DslString
 			$writtenTables = array();
@@ -273,7 +418,7 @@ class CDbYuml {
 					$separator = $i > 0 ? ";" : null;
 					$colName = "'" . $name . "'";
 					$pk = ($pk == '1') ? '+' : null;
-					$type = $type ? ' ' . strtoupper($type) : null;
+					$type = $type ? ' ' . $this->yuaml_escape(strtoupper($type)) : null;
 					$null = ($notnull == '1') ? ' NOT NULL' : null;
 					$fk = isset($fkcolumns[$name]) ? 'FK ' : null;
 
@@ -290,6 +435,11 @@ class CDbYuml {
 				foreach( $tbl['fk'] as $fk ) {
 					$rel = in_array($fk['column_name'], $nullablecols) ? "0..*-0..1" : "0..*-1";
 					$rel = in_array($fk['column_name'], $uniquecols) ? "0..1-1" : $rel;
+
+					if(!isset($tables[$fk['referenced_table_name']])) {
+						throw new \Exception("table not found");
+					}
+
 					$tableDslString.= "\n[$tblName]" . $rel . $writeYumlString($fk['referenced_table_name'], $tables[$fk['referenced_table_name']], $writeYumlString, "");
 				}
 				return $tableDslString . $eol;
@@ -302,12 +452,21 @@ class CDbYuml {
 			}
 
 
-			if($dslString) {
-				$this->writeToFile('cache', $dslString);
+			if($dslString && $this->isCacheEnabled() ) {
+				$this->writeCache($dslString);
 			}
 
 			$this->dsl_text = $dslString;
 			return $dslString;
+		}
+
+		/**
+		 * Crude escape function. It's unclear how to escape commas so they're replaced
+		 * @param  [type] $string [description]
+		 * @return [type]         [description]
+		 */
+		private function yuaml_escape($string) {
+			return preg_replace("/\s{2, }/", '', str_replace(',', ' ', $string));
 		}
 
 	/**
@@ -324,7 +483,8 @@ class CDbYuml {
 			echo "Error in preparing query: "
 			. $this->dbh->errorCode()
 			. " "
-			. htmlentities(print_r($this->dbh->errorInfo(), 1));
+			. htmlentities(print_r($this->dbh->errorInfo(), 1)) . " " 
+			. htmlentities($query);
 			exit;
 		}
 
@@ -334,7 +494,9 @@ class CDbYuml {
 			echo "Error in executing query: "
 			. $stmt->errorCode()
 			. " "
-			. htmlentities(print_r($stmt->errorInfo(), 1));
+			. htmlentities(print_r($stmt->errorInfo(), 1)) . " " 
+			. htmlentities($query);
+
 			exit;
 		}
 
@@ -386,8 +548,9 @@ class CDbYuml {
 	 */
 	public function findAllTables() {
 
-		$rows = $this->executeDialectQuery([
-			'sqlite' => "SELECT [name] FROM sqlite_master WHERE type='table' AND [name] != 'sqlite_sequence'",
+		$rows = $this->executeDialectQuery('List tables',
+			[
+			'sqlite' => "SELECT [name]\nFROM sqlite_master\nWHERE type='table'\n AND [name] != 'sqlite_sequence'",
 			'mysql' => "SHOW TABLES"
 			]);
 
@@ -409,19 +572,25 @@ class CDbYuml {
 
 		$escapedTableName = $this->escapeName($tableName);
 
-		$rows = $this->executeDialectQuery([
+		$rows = $this->executeDialectQuery('List columns',
+			[
 			'sqlite' => "PRAGMA table_info({$escapedTableName})",
-			'mysql' => "SHOW COLUMNS FROM `{escapedTableName}`"
+			'mysql' => "SHOW COLUMNS FROM {$escapedTableName}"
 			]);
 
 		$rows = array_map( array($this, 'mapColumnInfo'), $rows);
 		$uniqueColumnNames = $this->findUniqueColumnsInTable($tableName);
+
 
 		foreach($rows as &$row) {
 			if( in_array($row['name'], $uniqueColumnNames)) {
 				$row['unique'] = 1;
 			}
 		}
+
+		#echo "<pre>";
+	#	print_r($rows);
+	#	exit;
 
 		return $rows;
 	}
@@ -434,17 +603,18 @@ class CDbYuml {
 	private function findUniqueColumnsInTable($tableName) {
 		$uniqueColumns = array();
 
-		// For SQLite we need another query per index to get index columns
-		if($this->getSQLDialect() == 'sqlite') {
 
-			$escapedTableName = $this->escapeName($tableName);
-			$rows = $this->executeDialectQuery([
-				'sqlite' => "PRAGMA index_list({$escapedTableName})",
-				'mysql' => "SHOW COLUMN FROM `{escapedTableName}`"
-				]);
+		$escapedTableName = $this->escapeName($tableName);
+		$rows = $this->executeDialectQuery('List indicies',
+			[
+			'sqlite' => "PRAGMA index_list({$escapedTableName})",
+			'mysql' => "SHOW INDEXES FROM {$escapedTableName}"
+			]);
 
-			$rows = array_map( array($this, 'mapIndexInfo'), $rows);
+		$rows = array_map( array($this, 'mapIndexInfo'), $rows);
 
+		// For SQLite we need another query per index to get the column names
+		if($this->getSQLDialect() == 'sqlite' && count($rows) > 0) {
 			$params = array($tableName);
 			$macros = array();
 			foreach($rows as $row ) {
@@ -453,7 +623,8 @@ class CDbYuml {
 			}
 
 			$macros = implode(',', $macros);
-			$indexInfo = $this->executeDialectQuery("SELECT * FROM sqlite_master WHERE [type] = 'index' AND [tbl_name] = ? AND [name] IN ({$macros}) AND [sql] <> '' ORDER BY name;", $params);
+
+			$indexInfo = $this->executeDialectQuery('List index columns', "SELECT *\nFROM sqlite_master\nWHERE [type] = 'index' AND [tbl_name] = ?\n AND [name] IN ({$macros})\n AND [sql] <> ''\nORDER BY name;", $params);
 			foreach($indexInfo as $info) {
 				if( preg_match("/ ON \[{$info['tbl_name']}\] \((.*)\)/", $info['sql'], $m)) {
 					if( strpos($info['sql'], 'UNIQUE INDEX ') !== false ) { 
@@ -462,12 +633,18 @@ class CDbYuml {
 							$colName = rtrim(ltrim($col, '['), ']');
 							if(!in_array($colName, $uniqueColumns)) {
 								$uniqueColumns[] = $colName;
-							}
-							
+							}							
 						}
 					}
 				}
 			}
+		} else {
+
+			$uniqueColumns = array_filter(array_map(function($item) {
+				if( $item['unique'] == 1 ) { return $item['column']; }
+				return null;
+			}, $rows));
+
 		}
 		return $uniqueColumns;
 	}
@@ -484,23 +661,22 @@ class CDbYuml {
 			case 'sqlite': 
 
 			$newRow = [
-			'name' => $row['name'],
-			'unique' => $row['unique'],
-			'column' => null
+				'name' => $row['name'],
+				'unique' => $row['unique'] == "1" ? 1 : 0,
+				'column' => null
 			];
 
 			break;
 			case 'mysql': 
-			throw new \Exception("Not implemented");
-			$newRow = [
-			'referenced_table_name' => $row['referenced_table_name'],
-			'referenced_column_name' => $row['referenced_column_name'],
-			'column_name' => $row['column_name']
-			];
+				$newRow = [
+					'name' => $row['Key_name'],
+					'unique' => $row['Non_unique'] == "0" ? 1 : 0,
+					'column' => $row['Column_name']
+				];
 			break;
 		}
 
-		return $row;
+		return $newRow;
 	}
 
 	/**
@@ -509,12 +685,18 @@ class CDbYuml {
 	 * @return array
 	 */
 	public function findForeignKeysInTable($tableName) {
-		$tableName = $this->escapeName($tableName);
+		$escapedTableName = $this->escapeName($tableName);
 
-		$rows = $this->executeDialectQuery([
-			'sqlite' => "PRAGMA foreign_key_list({$tableName})",
-			'mysql' => "SELECT `column_name`, `constraint_name`, `referenced_table_name` FROM `information_schema`.`key_column_usage` WHERE `table_name` = `{$tableName}`;"
+		$rows = $this->executeDialectQuery('List FK',
+			[
+			'sqlite' => "PRAGMA foreign_key_list({$escapedTableName})",
+			'mysql' => "SELECT\n `column_name`,\n `constraint_name`,\n `referenced_table_name`,\n `referenced_column_name`\nFROM `information_schema`.`key_column_usage`\nWHERE `table_name` = ?\n AND `referenced_table_name` IS NOT NULL;"
+			],
+			[
+				'mysql' => array($tableName)
 			]);
+
+		#echo "<pre>";print_r($rows);#exit;
 
 		return array_map( array($this, 'mapForeignKeyInfo'), $rows);
 	}
@@ -542,19 +724,19 @@ class CDbYuml {
 		$newRow = [];
 		switch( $this->getSQLDialect() ){
 			case 'sqlite': 
-			$newRow = [
-			'referenced_table_name' => $row['table'],
-			'referenced_column_name' => $row['to'],
-			'column_name' => $row['from']
-			];
-
+				$newRow = [
+				'referenced_table_name' => $row['table'],
+				'referenced_column_name' => $row['to'],
+				'column_name' => $row['from']
+				];
 			break;
-			case 'mysql': 
-			$newRow = [
-			'referenced_table_name' => $row['referenced_table_name'],
-			'referenced_column_name' => $row['referenced_column_name'],
-			'column_name' => $row['column_name']
-			];
+			case 'mysql':
+
+				$newRow = [
+					'referenced_table_name' => $row['referenced_table_name'],
+					'referenced_column_name' => $row['referenced_column_name'],
+					'column_name' => $row['column_name']
+				];
 			break;
 		}
 		return $newRow;
@@ -615,7 +797,7 @@ class CDbYuml {
 	 * @param  variable $parameters Array of parameters or associative array of parameters
 	 * @return array
 	 */
-	private function executeDialectQuery($queryArray, $parameters = []) {
+	private function executeDialectQuery($name, $queryArray, $parameters = []) {
 		
 		$sql = "";
 		$param = array();
@@ -632,14 +814,27 @@ class CDbYuml {
 		}
 
 		if(isset($parameters[$dialect])) {
-			$param = $parameters[$dialect];
-		} else if( is_array($parameters)) {
-			$param = $parameters;
+			$parameters = $parameters[$dialect];
+		} else {
+			// If we have an associative array but not the current dialect, use an empty array
+			if( array_keys($parameters) !== range(0, count($parameters) - 1) ) {
+				$parameters = array();
+			}
 		}
 
-		return array_map(array($this, 'normalizeRows'), $this->callFetchFunction($sql, $parameters));
+		$this->queries[] = array('name' => $name, 'sql' => $sql, 'parameters' => $parameters, 'rowcount' => 0, 'duration' => 0);
+		$startTime = microtime(true);  
+		$rows = array_map(array($this, 'normalizeRows'), $this->callFetchFunction($sql, $parameters));
+		$endTime = microtime(true);  
+
+		$this->queries[count($this->queries)-1]['rowcount'] = count($rows);
+		$this->queries[count($this->queries)-1]['duration'] = number_format($endTime - $startTime, 10);
+		return $rows; 
 
 	}
+
+
+	
 
 	/**
 	 * Get the current SQL dialect
