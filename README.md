@@ -111,7 +111,10 @@ Finally you can also use the constructor in the very same way as setOptions:
 
 ```php
 # Example passing just the PDO:
-$cdbyuml = new \Dlid\DbYuml\CDbYuml($dbh);
+$cdbyuml = new \Dlid\DbYuml\CDbYuml([
+ 'query' => $dbh,
+ 'cachepath' => '/users/david/temp/cache/dbcache1'
+]);
 ```
 
 Caching
@@ -147,8 +150,12 @@ If the cachetime expires then the database will be queried again for it's struct
 
 ##Composer
 
+You can add [dlid/cdbyuml](https://packagist.org/packages/dlid/cdbyuml) to your composer.json file like this.
+
 ```sh
-composer example here
+ "require": {
+  "dlid/cdbyuml": "dev-master"
+ }
 ```
 
 
