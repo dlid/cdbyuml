@@ -2,7 +2,7 @@
     "name": "dlid/cdbyuml",    
     "type": "library",
     "description": "PHP classes for generating database models using yuml.me",
-    "keywords": ["module", "uml", "library", "yuml"],
+    "keywords": ["module", "uml", "library", "yuml", "mysql", "sqlite"],
     "homepage": "https://github.com/dlid/cdbyuml",
     "license": "MIT",
     "authors": [
