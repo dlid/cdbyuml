@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dlid/cdbyuml.svg?branch=master)](https://travis-ci.org/dlid/cdbyuml)
+
 CDbYuml
 =========
 
