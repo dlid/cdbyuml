@@ -1,8 +1,9 @@
 [![Build Status](https://travis-ci.org/dlid/cdbyuml.svg?branch=master)](https://travis-ci.org/dlid/cdbyuml)
-
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/dlid/cdbyuml/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/dlid/cdbyuml/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/dlid/cdbyuml/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/dlid/cdbyuml/?branch=master)
 
-[![Code Coverage](https://scrutinizer-ci.com/g/dlid/cdbyuml/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/dlid/cdbyuml/?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/dlid/cdbyuml/v/stable.svg)](https://packagist.org/packages/dlid/cdbyuml) [![Total Downloads](https://poser.pugx.org/dlid/cdbyuml/downloads.svg)](https://packagist.org/packages/dlid/cdbyuml) [![Latest Unstable Version](https://poser.pugx.org/dlid/cdbyuml/v/unstable.svg)](https://packagist.org/packages/dlid/cdbyuml) [![License](https://poser.pugx.org/dlid/cdbyuml/license.svg)](https://packagist.org/packages/dlid/cdbyuml)
+
 
 CDbYuml
 =========
