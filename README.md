@@ -1,5 +1,9 @@
 [![Build Status](https://travis-ci.org/dlid/cdbyuml.svg?branch=master)](https://travis-ci.org/dlid/cdbyuml)
 
+[![Code Coverage](https://scrutinizer-ci.com/g/dlid/cdbyuml/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/dlid/cdbyuml/?branch=master)
+
+[![Code Coverage](https://scrutinizer-ci.com/g/dlid/cdbyuml/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/dlid/cdbyuml/?branch=master)
+
 CDbYuml
 =========
 
