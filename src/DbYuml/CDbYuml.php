@@ -14,7 +14,7 @@ namespace Dlid\DbYuml;
 class CDbYuml {
 
 	private $dbh = null;
-	private $options = [];
+	private $options = null;
 	private $styles = ['scruffy','nofunky','plain'];
 
 
@@ -85,7 +85,7 @@ class CDbYuml {
 		}
 
 		private function isCacheEnabled() {
-			if( $this->options['force'] == true ) {
+			if( $this->options['force'] == true || $this->options['cachepath'] != null ) {
 				return false;
 			}
 			return $this->options['cachepath'] !== null;
@@ -105,6 +105,10 @@ class CDbYuml {
 		 */
 		public function downloadDiagram() {
 
+			if($this->options == null) {
+				throw new \Exception("Options not set");
+			}
+
 			if($this->image !== null && !$this->options['force']) {
 				return $this->image;
 			}
@@ -113,7 +117,6 @@ class CDbYuml {
 			if($this->isCacheEnabled()) {
 				if($this->dsl_cache && $this->dsl_cache == $this->dsl_text) {
 					if(is_file($this->getPath('png'))) {
-						header('x-CachedImageUsed: 1');
 						$this->image = file_get_contents($this->getPath('png'));
 						return $this;
 					}
@@ -190,9 +193,10 @@ class CDbYuml {
 			}
 
 			$this->downloadDiagram();
-			header('Content-type: image/png');
-			echo $this->image;
-			exit;
+			if(!headers_sent()) {
+				header('Content-type: image/png');
+				echo $this->image;
+			}
 		}
 
 		public function outputText($nocache = false) {
@@ -357,7 +361,6 @@ EOD;
 										$this->dsl_text = null;
 										unset($cache);
 									} else {
-										header('x-DslCacheUsed: 1');
 										$this->dsl_cache = $cache->data;
 									}
 								} else {
