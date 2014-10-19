@@ -160,18 +160,8 @@ class CDbYuml {
 		return "http://yuml.me/diagram/" . $this->options['style'] . "/class/draw";
 	}
 
-	/**
-	 * Main function that will check cache and
-	 * ensure cached or refreshed information depending on status
-	 */
-	private function execute() {
-
-		if(!$this->options) {
-			throw new \Exception("Options not set");
-		}
-
+	private function getDslText() {
 		$cache = $this->cache;
-		
 
 		// Ensure that we have the Dsl Text
 		$dslText = $cache->getDslText();
@@ -187,13 +177,37 @@ class CDbYuml {
 			$dslText = $gen->execute($dbl);
 		}
 
+		return $dslText;
+
+	}
+
+	private function getDiagramImage() {
+		$cache = $this->cache;
+
 		// Ensure that we have the Diagram image
 		$image = $cache->getImage();
 		if(is_null($image)) {
 			$http = new CYumlHttpRequest($this->options);
 			$image = $http->readImage($dslText);
 		}
-		
+		return $image;
+	}
+
+	/**
+	 * Main function that will check cache and
+	 * ensure cached or refreshed information depending on status
+	 */
+	private function execute() {
+
+		if(!$this->options) {
+			throw new \Exception("Options not set");
+		}
+
+		$cache = $this->cache;
+
+		$dslText = $this->getDslText();
+		$image = $this->getDiagramImage();
+
 		// Ensure cache is updated
 		$cache->writeDslText($dslText);
 		$cache->writeImage($image);
@@ -201,9 +215,7 @@ class CDbYuml {
 		// Update globals
 		$this->dslText = $dslText;
 		$this->image = $image;
-
 	}
-
 
 		/**
 		 * Output the diagram image to the browser
