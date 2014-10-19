@@ -1,2 +1,5 @@
 report/*
 *.sqlite3
+*.sqlite
+*.cache
+*.png

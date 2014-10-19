@@ -1,8 +1,8 @@
 <?php
 
-require('../src/DbYuml/CDbYuml.php');
+require('../autoloader.php');
 
-$dbh = new PDO('mysql:host=localhost;dbname=mydb;', 'root', '3UfRAwak', 
+$dbh = new PDO('mysql:host=localhost;dbname=mydb;', 'root', 'password', 
   array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
 
 $cdbyuml = new \Dlid\DbYuml\CDbYuml($dbh, [
@@ -11,5 +11,5 @@ $cdbyuml = new \Dlid\DbYuml\CDbYuml($dbh, [
 ]);
 
 $cdbyuml
-  #->outputText(true) // uncomment to show generated text and sql queries
+  ->outputText(true) // uncomment to show generated text and sql queries
   ->outputImage();

@@ -5,11 +5,10 @@
  *
  */
 
-
-require('../src/DbYuml/CDbYuml.php');
+require('../autoloader.php');
 
 $file_db = new PDO('sqlite:school.sqlite3');
-
+/*
 $file_db->exec('DROP TABLE IF EXISTS [teacher]');
 $file_db->exec('DROP TABLE IF EXISTS [course]');
 $file_db->exec('DROP TABLE IF EXISTS [person]');
@@ -44,12 +43,12 @@ $file_db->exec("CREATE TABLE [student] (
   [course_id] INTEGER NOT NULL CONSTRAINT [FK_student_course] REFERENCES [course]([id]), 
   [created] DATETIME NOT NULL, 
   [aborted] DATETIME);");
-
+*/
 
 $cdbyuml = new \Dlid\DbYuml\CDbYuml($file_db, [
-  'scale' => 100,
+  'scale' => 230,
   'style' => 'scruffy',
-  'cachepath'  => 'sqlite_example', // path and name of cache file
+  'cachepath'  => 'dlid14.mh', // path and name of cache file
   'cachetime'  => '15 minutes'       // re-check database structure only every 15 minutes
 ]);
 
