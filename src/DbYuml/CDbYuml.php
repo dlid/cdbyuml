@@ -181,7 +181,7 @@ class CDbYuml {
 
 	}
 
-	private function getDiagramImage() {
+	private function getDiagramImage($dslText) {
 		$cache = $this->cache;
 
 		// Ensure that we have the Diagram image
@@ -206,7 +206,7 @@ class CDbYuml {
 		$cache = $this->cache;
 
 		$dslText = $this->getDslText();
-		$image = $this->getDiagramImage();
+		$image = $this->getDiagramImage($dslText);
 
 		// Ensure cache is updated
 		$cache->writeDslText($dslText);
