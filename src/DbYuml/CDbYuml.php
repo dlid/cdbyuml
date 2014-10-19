@@ -23,6 +23,7 @@ class CDbYuml {
 
 	private $dslText = null;
 	private $image = null;
+	private $cache = null;
 
 	private $dialectClass = null;
 	private $generatorClass = null;
@@ -164,6 +165,10 @@ class CDbYuml {
 	 * ensure cached or refreshed information depending on status
 	 */
 	private function execute() {
+
+		if(!$this->options) {
+			throw new \Exception("Options not set");
+		}
 
 		$cache = $this->cache;
 		
