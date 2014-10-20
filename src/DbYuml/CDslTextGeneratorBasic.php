@@ -61,17 +61,31 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 	 * @param  string $eol    [description]
 	 */
 	private function generateTableDsl($tables, $tbl, $eol = "\n"){
+		$nullablecols = array();
+		$uniquecols = array();
 		$tblName = $tbl->getName();
-		$colFormat = $this->columnFormat;
 		$tableFormat = $this->tableFormat;
 
 		$this->writtenTables[] = $tblName;
-		$nullablecols = array();
-		$uniquecols = array();
-		$fkDslString = "";
-		$tableDslString = "[" . $tableFormat($tbl) . "|";
 		$fkcolumns = $tbl->getForeignKeyColumns();
 
+		list($tableDslString, $fkDslString) = $this->getDslTextForTable($tbl, $nullablecols, $uniquecols, $fkcolumns);
+
+		$returnText = "[" . $tableFormat($tbl) . "|" . $tableDslString;
+		$returnText .= ($fkDslString ? "|" . $fkDslString : null) .  "]";
+		$this->addForeignKeys($returnText, $tbl, $tables, $nullablecols, $uniquecols);
+		return $returnText . $eol;
+	}
+
+	/**
+	 * Get the Dsl text for the columns in a table
+	 * @param  CTable $tbl 	 The table
+	 * @return string[]      The table and dsl string
+	 */
+	private function getDslTextForTable($tbl, &$nullablecols, &$uniquecols, $fkcolumns) {
+		$colFormat = $this->columnFormat;
+		$fkDslString = '';
+		$tableDslString = '';
 		$i = 0;
 		foreach( $tbl as $col) {
 			$separator = $i > 0 ? ";" : null;
@@ -87,10 +101,7 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 			}
 			$i++;
 		}
-
-		$tableDslString .= ($fkDslString ? "|" . $fkDslString : null) .  "]";
-		$this->addForeignKeys($tableDslString, $tbl, $tables, $nullablecols, $uniquecols);
-		return $tableDslString . $eol;
+		return array($tableDslString, $fkDslString);
 	}
 
 	/**
