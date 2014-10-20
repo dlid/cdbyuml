@@ -54,6 +54,15 @@ class CCache {
 		
 	}
 
+	private function getCachedJSON($cachepath) {
+		if(is_file($cachepath)) {
+			$file_content = @file_get_contents($cachepath);
+			if( $file_content) {
+				return json_decode($file_content);
+			}
+		}
+		return null;
+	}
 
 	/**
 	 * Retreive the currently cached DslText
@@ -67,23 +76,13 @@ class CCache {
 
 		$cachepath = $this->cachefile;
 
-
-		if(is_file($cachepath)) {
-			$file_content = @file_get_contents($cachepath);
-			if( $file_content) {
-				$cacheObject = json_decode($file_content);
-				if( !$cacheObject ) {
-					throw new \Exception("Could not decode JSON from " . $cachepath);
-				}
-
-				// Check the hash
-				if( $cacheObject->hash == $this->hash) {
-					// Check if the cache is expired.
-					$expirationTime = strtotime ( $this->cachetime, $cacheObject->timestamp );
-					if( $expirationTime ) {
-						if( time() < $expirationTime  ) {
-							return $cacheObject->dslText;
-						}
+		$cacheObject = $this->getCachedJSON($cachepath);
+		if( $cacheObject ) {
+			if( $cacheObject->hash == $this->hash) {
+				$expirationTime = strtotime ( $this->cachetime, $cacheObject->timestamp );
+				if( $expirationTime ) {
+					if( time() < $expirationTime  ) {
+						return $cacheObject->dslText;
 					}
 				}
 			}
