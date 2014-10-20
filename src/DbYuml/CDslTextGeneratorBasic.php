@@ -103,11 +103,11 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 
 	/**
 	 * Add foreign keys
-	 * @param [type] $tableDslString [description]
-	 * @param [type] $tbl            [description]
-	 * @param [type] $tables         [description]
-	 * @param [type] $nullablecols   [description]
-	 * @param [type] $uniquecols     [description]
+	 * @param string $tableDslString [description]
+	 * @param CTable $tbl            [description]
+	 * @param CDialectBase $tables         [description]
+	 * @param string[] $nullablecols   [description]
+	 * @param string[] $uniquecols     [description]
 	 */
 	private function addForeignKeys(&$tableDslString, $tbl, $tables, $nullablecols, $uniquecols) {
 		$tblName = $tbl->getName();
