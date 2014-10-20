@@ -46,15 +46,6 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 	}
 
 	/**
-	 * Crude escape function. It's unclear how to escape commas so they're replaced
-	 * @param  string $string String to escape
-	 * @return string         Escaped string
-	 */
-	private function yuaml_escape($string) {
-		return preg_replace("/\s{2, }/", '', str_replace(',', ' ', $string));
-	}
-
-	/**
 	 * Recursive function to generate 
 	 * @param  CDialectBase $tables [description]
 	 * @param  CTable $tbl    [description]
