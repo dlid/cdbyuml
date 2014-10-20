@@ -65,14 +65,6 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 		$colFormat = $this->columnFormat;
 		$tableFormat = $this->tableFormat;
 
-		if( in_array($tblName, $this->writtenTables)) {
-			if( $eol  == "") {
-				$tblName = $tableFormat($tbl);
-				return "[{$tblName}]";
-			}
-			return;
-		}
-
 		$this->writtenTables[] = $tblName;
 		$nullablecols = array();
 		$uniquecols = array();
@@ -102,6 +94,22 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 	}
 
 	/**
+	 * Function to generate tables related to another
+	 * @param  CDialectBase $tables [description]
+	 * @param  CTable $tbl    [description]
+	 * @return string         [description]
+	 */
+	private function generateTableDslRecursive($tables, $tbl) {
+		if( in_array($tbl->getName(), $this->writtenTables)) {
+				$tableFormat = $this->tableFormat;
+				$tblName = $tableFormat($tbl);
+				return "[{$tblName}]";
+		} else {
+			return $this->generateTableDsl($tables, $tbl,  "");
+		}
+	}
+
+	/**
 	 * Add foreign keys
 	 * @param string $tableDslString [description]
 	 * @param CTable $tbl            [description]
@@ -118,7 +126,7 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 			if(!isset($tables[$fk->getForeignTableName()])) {
 				throw new \Exception("table not found");
 			}
-			$tableDslString.= "\n[$tblName]" . $rel . $this->generateTableDsl($tables, $tables[$fk->getForeignTableName()],  "");
+			$tableDslString.= "\n[$tblName]" . $rel . $this->generateTableDslRecursive($tables, $tables[$fk->getForeignTableName()]);
 		}
 
 

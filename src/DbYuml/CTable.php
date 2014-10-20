@@ -65,7 +65,7 @@ class CTable  extends \ArrayIterator {
 
 	/**
 	 * Get the current iterator item
-	 * @return CTable The current table
+	 * @return CCurrent The current table
 	 */
 	public function current() {
 		return $this->columns[$this->columnNames[$this->current]];
