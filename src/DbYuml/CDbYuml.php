@@ -96,7 +96,7 @@ class CDbYuml {
 
 	private function ensureOptionGenerator($className) {
 		if( class_exists($className) ) {
-			if(class_implements($className, 'Dlid\DbYuml\IDslTextGenerator')) {
+			if(class_implements($className, (string)'Dlid\DbYuml\IDslTextGenerator')) {
 					$this->generatorClass = $className;
 			} else {
 				throw new \Exception("Class {$className} must implement IDslTextGenerator");
@@ -135,7 +135,7 @@ class CDbYuml {
 	 * @param variable $options    array with options or PDO object
 	 * @param variable $altOptions array with options if $options parameter is PDO object
 	 */
-	public function setOptions($options = [], $altOptions = []) {
+	public function setOptions($options, $altOptions = []) {
 
 		$default = [
 		'sql_dialect' => 'sqlite',
@@ -153,9 +153,9 @@ class CDbYuml {
 		'formatColumnName' => array($this, 'formatColumnName'),
 		'generator' => '\Dlid\DbYuml\CDslTextGeneratorBasic'
 		];
- 	
+
 		// Allow to send in PDO object as param 1 and options as param 2
-		if(is_a($options, '\PDO') && !is_array($options)) {
+		if(is_a($options, '\PDO') @) {
 			$tmpOptions = is_array($altOptions) ? $altOptions : array();
 			$tmpOptions['query'] = $options;
 			$options = $tmpOptions;
@@ -239,9 +239,12 @@ class CDbYuml {
 
 		/**
 		 * Output the diagram image to the browser
-		 * @return [type] [description]
+		 * @return boolean Set to true to ignore cache
 		 */
 		public function outputImage($nocache = false) {
+			if( $nocache === true) {
+				$this->cache->disableCache();
+			}
 			$this->execute();
 			if(!headers_sent()) {
 				header('Content-type: image/png');
@@ -303,8 +306,7 @@ EOD;
 
 		/**
 		 * Save the diagram image to a location of your choice
-		 * @param  [type] $path [description]
-		 * @return [type]       [description]
+		 * @param  string $path [description]
 		 */
 		public function saveImage($path) {
 			$this->execute();
@@ -313,9 +315,7 @@ EOD;
 				throw new \Exception("File or path is not writeable: " . $path);
 			}
 
-			if( !@file_put_contents($path, $this->image)) {
-				throw new \Exception("Could not write file " . error_get_last()['message']);
-			}
+			CCache::writeFile($path, $this->image);
 
 			return $this;
 		}
@@ -334,7 +334,7 @@ EOD;
 			echo "Error in preparing query: "
 			. $this->dbh->errorCode()
 			. " "
-			. htmlentities(print_r($this->dbh->errorInfo(), 1)) . " " 
+			. htmlentities(print_r($this->dbh->errorInfo(), true)) . " " 
 			. htmlentities($query);
 			exit;
 		}
@@ -345,7 +345,7 @@ EOD;
 			echo "Error in executing query: "
 			. $stmt->errorCode()
 			. " "
-			. htmlentities(print_r($stmt->errorInfo(), 1)) . " " 
+			. htmlentities(print_r($stmt->errorInfo(), true)) . " " 
 			. htmlentities($query);
 
 			exit;
@@ -356,8 +356,8 @@ EOD;
 
 	/**
 	 * Transform object to array if it is not an array already
-	 * @param  [type] $row [description]
-	 * @return [type]      [description]
+	 * @param  object $row The object to transform
+	 * @return array       The resulting array
 	 */
 	private function normalizeRows($row) {
 		if( is_object($row)) {

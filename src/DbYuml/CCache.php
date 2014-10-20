@@ -117,8 +117,12 @@ class CCache {
 			throw new \Exception("File or path is not writeable: " . $cachepath);
 		}
 
-		if( !@file_put_contents($cachepath, $data)) {
-			throw new \Exception("Could not write cache file " . error_get_last()['message']);
+		$this->writeFile($cachepath, $data);
+	}
+
+	public static function writeFile($path, $data) {
+		if( !@file_put_contents($path, $data)) {
+			throw new \Exception("Could not write file " . error_get_last()['message']);
 		}
 	}
 
@@ -134,9 +138,7 @@ class CCache {
 			throw new \Exception("File or path is not writeable: " . $cachepath);
 		}
 
-		if( !@file_put_contents($cachepath, $data)) {
-			throw new \Exception("Could not write cache file " . error_get_last()['message']);
-		}
+		$this->writeFile($cachepath, $data);
 
 	}
 

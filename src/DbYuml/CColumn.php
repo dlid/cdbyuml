@@ -56,7 +56,7 @@ class CColumn {
 	 * @param bool $newValue Set to true if the column is unique
 	 */
 	public function setUnique($newValue) {
-		$this->unique = $value;
+		$this->unique = $newValue;
 	}
 
 	/**
@@ -88,7 +88,7 @@ class CColumn {
 	 * @param bool $newValue True if it's a primary key
 	 */
 	public function setPk($newValue) {
-		$this->pk = $newVallue;
+		$this->pk = $newValue;
 	}
 
 
