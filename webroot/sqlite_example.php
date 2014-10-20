@@ -54,4 +54,4 @@ $cdbyuml = new \Dlid\DbYuml\CDbYuml($file_db, [
 
 $cdbyuml
   #->outputText() // Uncommen to see debug information
-  ->outputImage();
+  ->outputImage(true);

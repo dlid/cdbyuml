@@ -97,7 +97,7 @@ class CTable  extends \ArrayIterator {
 	/**
 	 * Set an item by name
 	 * @param  string $offset Array key to get
-	 * @param  CTable $value  The CTable to set
+	 * @param  CColumn $value  The CTable to set
 	 */
   public function offsetSet($offset, $value) 
   {
@@ -139,7 +139,7 @@ class CTable  extends \ArrayIterator {
   /**
    * Return a table by name
    * @param  string $offset Table name
-   * @return CTable         The table or null
+   * @return CColumn         The table or null
    */
   public function offsetGet($offset) 
   {

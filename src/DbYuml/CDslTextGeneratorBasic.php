@@ -97,7 +97,20 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 		}
 
 		$tableDslString .= ($fkDslString ? "|" . $fkDslString : null) .  "]";
+		$this->addForeignKeys($tableDslString, $tbl, $tables, $nullablecols, $uniquecols);
+		return $tableDslString . $eol;
+	}
 
+	/**
+	 * Add foreign keys
+	 * @param [type] $tableDslString [description]
+	 * @param [type] $tbl            [description]
+	 * @param [type] $tables         [description]
+	 * @param [type] $nullablecols   [description]
+	 * @param [type] $uniquecols     [description]
+	 */
+	private function addForeignKeys(&$tableDslString, $tbl, $tables, $nullablecols, $uniquecols) {
+		$tblName = $tbl->getName();
 		foreach( $tbl->getForeignKeys() as $fk ) {
 			$rel = in_array($fk->getColumnName(), $nullablecols) ? "0..*-0..1" : "0..*-1";
 			$rel = in_array($fk->getColumnName(), $uniquecols) ? "0..1-1" : $rel;
@@ -108,7 +121,7 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 			$tableDslString.= "\n[$tblName]" . $rel . $this->generateTableDsl($tables, $tables[$fk->getForeignTableName()],  "");
 		}
 
-		return $tableDslString . $eol;
-	}
+
+	} 
 
 }
