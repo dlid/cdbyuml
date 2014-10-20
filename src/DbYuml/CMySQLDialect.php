@@ -45,24 +45,17 @@ class CMySQLDialect extends CDialectBase {
 
 	private function addColumns(&$newTable, $columnRows, $uniqueColumns) {
 			foreach( $columnRows as $colRow) {
-				$name = $colRow['Field'];
-				$type = $colRow['Type'];
-				$notnull = ($colRow['Null'] == 'NO' ? true : false);
-				$pk = $colRow['Key'] == 'PRI';
-				$newColumn = new CColumn( $name, $type, $notnull, $pk, in_array($name, $uniqueColumns) );
-				$newTable[$name] = $newColumn;
+				$newTable[$colRow['Field']] = new CColumn( $colRow['Field'], 
+					$colRow['Type'], 
+					($colRow['Null'] == 'NO' ? true : false), 
+					$colRow['Key'] == 'PRI', in_array($colRow['Field'], $uniqueColumns) );
 			}
 	}
 
 	private function addMySqlForeignKeys(&$newTable) {
-		$tableName = $newTable->getName();
-		$fkRows = $this->query("SELECT\n `column_name`,\n `constraint_name`,\n `referenced_table_name`,\n `referenced_column_name`\nFROM `information_schema`.`key_column_usage`\nWHERE `table_name` = ?\n AND `referenced_table_name` IS NOT NULL;", [$tableName], 'List Foreign Keys');
+		$fkRows = $this->query("SELECT\n `column_name`,\n `constraint_name`,\n `referenced_table_name`,\n `referenced_column_name`\nFROM `information_schema`.`key_column_usage`\nWHERE `table_name` = ?\n AND `referenced_table_name` IS NOT NULL;", [$newTable->getName()], 'List Foreign Keys');
 		foreach( $fkRows as $fkRow) {
-			$localColumn = $fkRow['column_name'];
-			$foreignTable = $fkRow['referenced_table_name'];
-			$foreignColumn = $fkRow['referenced_column_name'];
-
-			$newFk = new CForeignKey($localColumn, $foreignTable, $foreignColumn);
+			$newFk = new CForeignKey($fkRow['column_name'], $fkRow['referenced_table_name'], $fkRow['referenced_column_name']);
 			$newTable->addForeignKey($newFk);
 		}
 	}
