@@ -56,6 +56,80 @@ class CDbYuml {
 		return "{$pk}{$colName}{$type}{$null}";
 	}
 
+	private function ensureOptionStyle($style) {
+		if( !in_array($style, $this->styles)) {
+			throw new \Exception("Valid 'style' values are " . implode(', ', $this->styles) );
+		}
+	}
+
+	private function ensureOptionScale($scale) {
+		if( !is_numeric($scale) || intval($scale) < 0  ) {
+			throw new \Exception("'scale' must be a percentage, where 100 is 'normal'");
+		}
+	}
+
+	public function ensureOptionFormatTableName($callback) {
+		if( !is_callable($callback)) {
+			throw new \Exception("'formatTableName' must be a callable function");
+		}
+	}
+
+	public function ensureOptionFormatColumnName($callback) {
+		if( !is_callable($callback)) {
+			throw new \Exception("'formatColumnName' must be a callable function");
+		}
+	}
+
+	public function ensureOptionQuery(&$options) {
+
+		// query parameter
+		if( !is_callable($options['query'])) {
+			if( is_a($options['query'], '\PDO')) {
+				$this->dbh = $options['query'];
+				$options['sql_dialect'] = $this->dbh->getAttribute(\PDO::ATTR_DRIVER_NAME);
+				$options['query'] = array($this, 'executePdoQuery');
+			} else {
+				throw new \Exception("Query must be a callable method");
+			}
+		}
+	}
+
+	private function ensureOptionGenerator($className) {
+		if( class_exists($className) ) {
+			if(class_implements($className, 'Dlid\DbYuml\IDslTextGenerator')) {
+					$this->generatorClass = $className;
+			} else {
+				throw new \Exception("Class {$className} must implement IDslTextGenerator");
+			}
+		} else {
+			throw new \Exception("Generator class does not exist " . $this->options['generator']);
+		}
+	}
+
+	/**
+	 * Based on the sql_dialect, get the IDialect class that should be used
+	 * @param  string $dialect The friendly name to convert to the class name
+	 */
+	private function ensureOptionSqlDialect(&$dialect) {
+		if( isset( $this->dialects[$dialect] )) {
+			$dialect = $this->dialects[$dialect];
+		}
+
+		// Attempt to create class
+		$className = $dialect;
+		if(class_exists($className)) {
+			if(get_parent_class($className) == 'Dlid\DbYuml\CDialectBase') {
+				$this->dialectClass = $className;
+			} else {
+				throw new \Exception("Class {$className} must extend CDialectBase");
+			}
+		} else {
+			throw new \Exception("Unable to load dialect class " . $className);
+		}
+
+
+	}
+
 	/**
 	 * Set the options to use 
 	 * @param variable $options    array with options or PDO object
@@ -88,67 +162,13 @@ class CDbYuml {
 		}
 
 		$this->options = array_merge($default, $options);
-
-		// style parameter
-		if( !in_array($this->options['style'], $this->styles)) {
-			throw new \Exception("Valid 'style' values are " . implode(', ', $this->styles) );
-		}
-
-		// scale parameter
-		if( !is_numeric($this->options['scale'])) {
-			throw new \Exception("'scale' must be a percentage, where 100 is 'normal'");
-		}
-
-		// format parameters
-		if( !is_callable($this->options['formatTableName'])) {
-			throw new \Exception("'formatTableName' must be a callable function");
-		}
-
-		if( !is_callable($this->options['formatColumnName'])) {
-			throw new \Exception("'formatColumnName' must be  a callable function");
-		}
-
-		// query parameter
-		if( !is_callable($this->options['query'])) {
-			if( is_a($this->options['query'], '\PDO')) {
-				$this->dbh = $this->options['query'];
-				$this->options['sql_dialect'] = $this->dbh->getAttribute(\PDO::ATTR_DRIVER_NAME);
-				$this->options['query'] = array($this, 'executePdoQuery');
-			} else {
-				throw new \Exception("Query must be a callable method");
-			}
-		}
-
-		// generator parameter
-		$className = $this->options['generator'];
-		if( class_exists($className) ) {
-			if(class_implements($className, 'Dlid\DbYuml\IDslTextGenerator')) {
-					$this->generatorClass = $className;
-			} else {
-				throw new \Exception("Class {$className} must implement IDslTextGenerator");
-			}
-		} else {
-			throw new \Exception("Generator class does not exist " . $this->options['generator']);
-		}
-
-		//
-		// Based on the sql_dialect, get the IDialect class that should be used
-		// 
-		if( isset( $this->dialects[$this->options['sql_dialect']] )) {
-			$this->options['sql_dialect'] = $this->dialects[$this->options['sql_dialect']];
-		}
-			
-		// Attempt to create class
-		$className = $this->options['sql_dialect'];
-		if(class_exists($className)) {
-			if(get_parent_class($className) == 'Dlid\DbYuml\CDialectBase') {
-				$this->dialectClass = $className;
-			} else {
-				throw new \Exception("Class {$className} must extend CDialectBase");
-			}
-		} else {
-			throw new \Exception("Unable to load dialect class " . $className);
-		}
+		$this->ensureOptionStyle($this->options['style']);
+		$this->ensureOptionScale($this->options['scale']);
+		$this->ensureOptionFormatTableName($this->options['formatTableName']);
+		$this->ensureOptionFormatColumnName($this->options['formatColumnName']);
+		$this->ensureOptionQuery($this->options);
+		$this->ensureOptionGenerator($this->options['generator']);
+		$this->ensureOptionSqlDialect($this->options['sql_dialect']);
 
 		// Initialize cache class
 		$this->cache = new CCache($this->options);
