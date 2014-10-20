@@ -57,7 +57,7 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 	/**
 	 * Recursive function to generate 
 	 * @param  CDialectBase $tables [description]
-	 * @param  array $tbl    [description]
+	 * @param  CTable $tbl    [description]
 	 * @param  string $eol    [description]
 	 */
 	private function generateTableDsl($tables, $tbl, $eol = "\n"){
