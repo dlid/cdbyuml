@@ -64,6 +64,18 @@ class CCache {
 		return null;
 	}
 
+	private function parseCachedObject($cacheObject) {
+		if( $cacheObject->hash == $this->hash) {
+			$expirationTime = strtotime ( $this->cachetime, $cacheObject->timestamp );
+			if( $expirationTime ) {
+				if( time() < $expirationTime  ) {
+					return $cacheObject->dslText;
+				}
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Retreive the currently cached DslText
 	 * or null if cache does not exist or has expired
@@ -78,14 +90,7 @@ class CCache {
 
 		$cacheObject = $this->getCachedJSON($cachepath);
 		if( $cacheObject ) {
-			if( $cacheObject->hash == $this->hash) {
-				$expirationTime = strtotime ( $this->cachetime, $cacheObject->timestamp );
-				if( $expirationTime ) {
-					if( time() < $expirationTime  ) {
-						return $cacheObject->dslText;
-					}
-				}
-			}
+			return $this->parseCachedObject($cacheObject);
 		}
 		return null;
 	}
