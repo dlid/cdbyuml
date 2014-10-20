@@ -96,7 +96,7 @@ class CDbYuml {
 
 	private function ensureOptionGenerator($className) {
 		if( class_exists($className) ) {
-			if(class_implements($className, (string)'Dlid\DbYuml\IDslTextGenerator')) {
+			if( in_array('Dlid\DbYuml\IDslTextGenerator', class_implements($className)) ) {
 					$this->generatorClass = $className;
 			} else {
 				throw new \Exception("Class {$className} must implement IDslTextGenerator");
@@ -252,6 +252,11 @@ class CDbYuml {
 			}
 		}
 
+		/**
+		 * Write Dsl Text to output
+		 * @param  boolean $nocache [description]
+		 * @return CDbYuml           [description]
+		 */
 		public function outputText($nocache = false) {
 
 			if( $nocache === true) {
@@ -300,7 +305,7 @@ EOD;
 				$queryHtml
 EOD;
 		echo $html;
-			exit;
+			return $this;
 		}
 
 

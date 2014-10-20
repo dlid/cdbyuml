@@ -37,7 +37,7 @@ class CMySQLDialect extends CDialectBase {
 				$pk = $colRow['Key'] == 'PRI';
 
 				$newColumn = new CColumn( $name, $type, $notnull, $pk, in_array($name, $uniqueColumns) );
-				$newTable->addColumn($newColumn);
+				$newTable[$name] = $newColumn;
 			}
 
 
@@ -51,7 +51,7 @@ class CMySQLDialect extends CDialectBase {
 				$newFk = new CForeignKey($localColumn, $foreignTable, $foreignColumn);
 				$newTable->addForeignKey($newFk);
 			}
-			$this->addTable($newTable);
+			$this[$tableName] = $newTable;
 		}
 	}
 

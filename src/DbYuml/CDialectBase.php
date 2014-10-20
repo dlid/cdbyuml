@@ -30,19 +30,6 @@ class CDialectBase extends \ArrayIterator {
 	}
 
 	/**
-	 * Add a new table to the collection
-	 * @param CTable $table The table to add
-	 */
-	public function addTable($table) {
-
-		if(!isset($this[$table->getName()])) {
-			$this[$table->getName()] = $table;
-		} else {
-			throw new \Exception("Table already exists");
-		}
-	}
-
-	/**
 	 * Get all tables
 	 * @return CTable[] An array of available tables
 	 */

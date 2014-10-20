@@ -47,8 +47,8 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 
 	/**
 	 * Crude escape function. It's unclear how to escape commas so they're replaced
-	 * @param  [type] $string [description]
-	 * @return [type]         [description]
+	 * @param  string $string String to escape
+	 * @return string         Escaped string
 	 */
 	private function yuaml_escape($string) {
 		return preg_replace("/\s{2, }/", '', str_replace(',', ' ', $string));
@@ -56,10 +56,9 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 
 	/**
 	 * Recursive function to generate 
-	 * @param  [type] $tables [description]
-	 * @param  [type] $tbl    [description]
+	 * @param  CDialectBase $tables [description]
+	 * @param  array $tbl    [description]
 	 * @param  string $eol    [description]
-	 * @return [type]         [description]
 	 */
 	private function generateTableDsl($tables, $tbl, $eol = "\n"){
 		$tblName = $tbl->getName();
@@ -77,10 +76,8 @@ class CDslTextGeneratorBasic implements IDslTextGenerator {
 		$this->writtenTables[] = $tblName;
 		$nullablecols = array();
 		$uniquecols = array();
-		$fkcolumns = array();
 		$fkDslString = "";
 		$tableDslString = "[" . $tableFormat($tbl) . "|";
-
 		$fkcolumns = $tbl->getForeignKeyColumns();
 
 		$i = 0;

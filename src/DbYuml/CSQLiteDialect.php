@@ -38,7 +38,7 @@ class CSQLiteDialect extends CDialectBase {
 				$pk = intval($colRow['pk']) == 1 ? true : false;
 
 				$newColumn = new CColumn( $name, $type, $notnull, $pk, in_array($name, $uniqueColumns) );
-				$newTable->addColumn($newColumn);
+				$newTable[$name] = $newColumn;
 			}
 	}
 
@@ -72,7 +72,7 @@ class CSQLiteDialect extends CDialectBase {
 			$this->addColumns($newTable, $columnRows, $uniqueColumns);
 			$this->addForeignKeys($newTable);
 
-			$this->addTable($newTable);
+			$this[$tableName] = $newTable;
 		}
 	}
 

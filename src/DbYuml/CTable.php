@@ -21,18 +21,6 @@ class CTable  extends \ArrayIterator {
 		return $this->name;
 	}
 
-	/**
-	 * Add a new column to the collection
-	 * @param CColumn $column The column to add
-	 */
-	public function addColumn($column) {
-
-		if(!isset($this[$column->getName()])) {
-			$this[$column->getName()] = $column;
-		} else {
-			throw new \Exception("Column already exists");
-		}
-	}
 
 	/**
 	 * Add a foreign key
