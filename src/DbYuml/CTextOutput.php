@@ -4,6 +4,12 @@ namespace Dlid\DbYuml;
 
 class CTextOutput {
 
+	/**
+	 * 
+	 * @var string
+	 */
+	private $html;
+
 	public function __toString() {
 		return $this->html;
 	}
@@ -18,20 +24,7 @@ class CTextOutput {
 
 		$text = htmlentities($dslText, null, 'utf-8');
 
-		$queryHtml = "";
-		foreach( $queries as $query) {
-			$sql = htmlentities($query['sql'], null, 'utf-8');
-			$duration = htmlentities($query['duration'], null, 'utf-8');
-			$rowcount = htmlentities($query['rowcount'], null, 'utf-8');
-			$name = htmlentities($query['name'], null, 'utf-8');
-			if(count($query['parameters']) > 0) {
-				$parameters = "<pre>" . htmlentities(print_r($query['parameters'], true), null, 'utf-8') ."</pre>";
-			} else {
-				$parameters = "";
-			}
-
-			$queryHtml.="<tr><th>$name</th><td ><pre>$sql</pre></td><td>$parameters</td><td>$rowcount</td><td>$duration</td></tr>";
-		}
+		$queryHtml = $this->formatQueryTable($queries);
 
 		if( $queryHtml ) {
 			$queryHtml = <<<EOD
@@ -54,6 +47,24 @@ EOD;
 			$queryHtml
 EOD;
 		$this->html = $html;
+	}
+
+	private function formatQueryTable($queries) {
+		$queryHtml = "";
+		foreach( $queries as $query) {
+			$sql = htmlentities($query['sql'], null, 'utf-8');
+			$duration = htmlentities($query['duration'], null, 'utf-8');
+			$rowcount = htmlentities($query['rowcount'], null, 'utf-8');
+			$name = htmlentities($query['name'], null, 'utf-8');
+			if(count($query['parameters']) > 0) {
+				$parameters = "<pre>" . htmlentities(print_r($query['parameters'], true), null, 'utf-8') ."</pre>";
+			} else {
+				$parameters = "";
+			}
+
+			$queryHtml.="<tr><th>$name</th><td ><pre>$sql</pre></td><td>$parameters</td><td>$rowcount</td><td>$duration</td></tr>";
+		}
+		return $queryHtml;
 	}
 
 }

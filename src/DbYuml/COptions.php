@@ -12,6 +12,12 @@ class COptions extends \ArrayIterator {
 		'mysql' => '\Dlid\DbYuml\CMySQLDialect'
 	];
 
+	/**
+	 * The current PDO connection
+	 * @var \PDO
+	 */
+	private $dbh;
+
 	public function __construct($options, $altOptions) {
 		$default = [
 			'sql_dialect' => 'sqlite',
