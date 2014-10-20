@@ -155,7 +155,7 @@ class CDbYuml {
 		];
 
 		// Allow to send in PDO object as param 1 and options as param 2
-		if(is_a($options, '\PDO') @) {
+		if(is_a($options, '\PDO')) {
 			$tmpOptions = is_array($altOptions) ? $altOptions : array();
 			$tmpOptions['query'] = $options;
 			$options = $tmpOptions;
