@@ -2,7 +2,7 @@
 
 require('../autoloader.php');
 
-$dbh = new PDO('mysql:host=localhost;dbname=mydb;', 'root', 'password', 
+$dbh = new PDO('mysql:host=localhost;dbname=ames;', 'root', '3UfRAwak', 
   array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
 
 $cdbyuml = new \Dlid\DbYuml\CDbYuml($dbh, [
